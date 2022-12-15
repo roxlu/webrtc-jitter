@@ -58,9 +58,9 @@ graphs. This image shows typical graphs that we get:
 > ![](./images/packets-lost.png)
 
 One thing to notice is that no packets are lost. But the packets
-are discarded. To figure out why the packets are discarded we
-looked at some other graphs that [chrome://webrtc-internals][cint] provides. 
-W3C defines discarded packets as:
+are discarded. To figure out why the packets are discarded we've
+looked at some other graphs that [chrome://webrtc-internals][cint] 
+provides.  W3C defines discarded packets as:
 
 > _The cumulative number of RTP packets discarded by the jitter buffer due to late or early-arrival, i.e., these packets are not played out. RTP packets discarded due to packet duplication are not reported in this metric [XRBLOCK-STATS]. Calculated as defined in [RFC7002] section 3.2 and Appendix A.a._
 
@@ -77,13 +77,13 @@ this:
 There are a couple of graphs that show the reasons of
 concealment. Though, I'm not entirely sure if these represent all
 the concealed samples. The image below shows the concealed
-samples for acceleration or deceleration.  _Note: this screenshot
+samples for acceleration and deceleration.  _Note: this screenshot
 was from a different test than the screenshots above_.
 
 > ![](./images/concealed-reason.png)
 
 When we look at the totals, we can see that there are a lot more
-concealed samples than the inserted and removed samples show in
+concealed samples (6M) than the inserted and removed samples show in
 the graphs above. I'm not sure why these totals don't match.
 
 > ![](./images/concealed-total.png)
@@ -96,15 +96,15 @@ Here we can see all the graphs from a typical test:
 
 ## Inspecting Chromiums jitter buffer
 
-After looking at the graphcs I still wasn't sure why so many
-packets were discarded and concealed I wanted to dive a bit
+After looking at the graphs I still wasn't sure why so many
+packets were discarded and concealed. I wanted to dive a bit
 deeper. I wanted to know exactly why packets were concealed. To
-do this I compiled chromium from source. Then I started looking
-into the code. I wanted to figure out what code was responsible
-of keeping track of concealed packets. It turned out that the
-neteq code from the WebRtc library takes care this. I added some
-logs into [decision_logic][wd], which makes a decision about what
-to do with audio packets: e.g. why they should be
+do this I compiled chromium from source. Then I started
+looking into the code. I wanted to figure out what code was
+responsible of keeping track of concealed packets. It turned out
+that the neteq code from the WebRtc library takes care of this. I
+added some logs into [decision_logic][wd], which makes a decision
+about what to do with audio packets: e.g. why they should be
 concealed. _Note: this is my current understanding and I might be
 wrong._
 
@@ -154,7 +154,7 @@ playout_delay_ms = 99,  highThreshold()<<2=480, hightThreshold()=120, LowThresho
 As these playout delays in neteq changed often, I started looking
 into the timestamps. I added some code that would log the delta
 between successive audio timestamps. At the same time I created a
-capture from the RTP streams using tshark. I wanted to compare if
+capture from the RTP streams using tshark. I wanted to check if
 the timestamps I received from GStreamer were correct.
 
 _I've used something like this to capture the RTP streams from the
@@ -211,11 +211,11 @@ RTP.TIMESTAMP	DELTA
 
 ```
 
-So this is where it things seem to go wrong. Although not
-entirely sure yet, I think that because the timestamps do not
-increment with 960 for each 20ms audio packet, *but* each packet
-does contain 20ms, there the player must decelarate or
-accelerate (right?).
+So this is where things seem to go wrong. Although not entirely
+sure yet, I think that because the timestamps do not increment
+with 960 for each 20ms audio packet, *but* each packet does
+contain 20ms, there the player must decelerate or accelerate
+(right?).
 
 ## Unanswered questions
 
