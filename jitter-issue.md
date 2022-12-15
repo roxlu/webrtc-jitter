@@ -39,7 +39,7 @@ incorrect samplerates or bitdepths. Though when there would be a
 mismatch between samplerate or bitdepth, the sound would have
 been different from what we hear now. Typically issues with
 samplerate or bitdepth are more distinct. I made this recording
-as an example of what we heard:
+as an example of what we heard: `./audio/choppy.mp3`.
 
 <audio controls>
   <source src="./audio/choppy.mp3" type="audio/mpeg">
